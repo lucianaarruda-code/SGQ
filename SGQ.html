@@ -1,0 +1,487 @@
+<!SGQ html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIPOC — Gerenciamento de Mudança</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #F4F6F5;
+    --panel: #FFFFFF;
+    --ink: #16261F;
+    --ink-soft: #4B5D55;
+    --line: #D8E0DC;
+    --spine: #16261F;
+
+    --s-color: #2F6F5E;   /* Suppliers - verde petróleo */
+    --i-color: #1F5C7A;   /* Inputs - azul */
+    --p-color: #A15A1E;   /* Process - âmbar queimado */
+    --o-color: #6B4A9A;   /* Outputs - roxo */
+    --c-color: #B0392F;   /* Customers - terracota escuro */
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .wrap{
+    max-width:1400px;
+    margin:0 auto;
+    padding:28px 32px 60px;
+  }
+
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:24px;
+    border-bottom:2px solid var(--ink);
+    padding-bottom:18px;
+    margin-bottom:6px;
+  }
+
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin:0 0 6px;
+  }
+
+  h1{
+    font-family:'IBM Plex Serif', serif;
+    font-weight:600;
+    font-size:clamp(28px,3.6vw,42px);
+    margin:0;
+    letter-spacing:-.01em;
+  }
+
+  h1 .accent{ color:var(--p-color); }
+
+  .subtitle{
+    font-size:14.5px;
+    color:var(--ink-soft);
+    margin-top:6px;
+    max-width:60ch;
+  }
+
+  .tools{
+    display:flex;
+    gap:10px;
+    flex-shrink:0;
+  }
+
+  button.tool-btn{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    background:var(--panel);
+    border:1.5px solid var(--ink);
+    color:var(--ink);
+    padding:9px 14px;
+    border-radius:3px;
+    cursor:pointer;
+    transition:background .15s, color .15s;
+    white-space:nowrap;
+  }
+  button.tool-btn:hover{ background:var(--ink); color:#fff; }
+
+  /* Process boundary strip */
+  .boundary{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin:22px 0 20px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    color:var(--ink-soft);
+  }
+  .boundary .edge{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    padding:7px 12px;
+    border-radius:20px;
+  }
+  .boundary .edge b{
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    font-weight:600;
+    outline:none;
+  }
+  .boundary .edge.start b:focus, .boundary .edge.end b:focus{ border-bottom:1px dashed var(--ink-soft); }
+  .boundary .dots{
+    flex:1;
+    height:1px;
+    margin:0 16px;
+    background-image:linear-gradient(to right, var(--ink-soft) 40%, transparent 0%);
+    background-position:top;
+    background-size:8px 1px;
+    background-repeat:repeat-x;
+  }
+
+  /* Grid */
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(5, 1fr);
+    gap:14px;
+    position:relative;
+  }
+
+  .col{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:6px;
+    display:flex;
+    flex-direction:column;
+    min-height:420px;
+    overflow:hidden;
+    position:relative;
+  }
+
+  .col::before{
+    content:"";
+    position:absolute;
+    top:0; left:0; right:0;
+    height:5px;
+    background:var(--col-color);
+  }
+
+  .col-head{
+    padding:22px 16px 14px;
+    border-bottom:1px solid var(--line);
+  }
+
+  .letter{
+    font-family:'IBM Plex Serif', serif;
+    font-weight:700;
+    font-size:34px;
+    color:var(--col-color);
+    line-height:1;
+  }
+
+  .colname{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-top:6px;
+  }
+
+  .colname-pt{
+    font-size:13px;
+    font-weight:600;
+    color:var(--ink);
+    margin-top:1px;
+  }
+
+  ul.items{
+    list-style:none;
+    margin:0;
+    padding:10px 12px 12px;
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+
+  ul.items li{
+    background:#FBFBFA;
+    border:1px solid var(--line);
+    border-left:3px solid var(--col-color);
+    border-radius:4px;
+    padding:9px 10px;
+    font-size:13.5px;
+    line-height:1.35;
+    position:relative;
+    outline:none;
+  }
+  ul.items li:focus{
+    border-color:var(--col-color);
+    background:#fff;
+  }
+
+  .col.process ul.items li{
+    counter-increment: step;
+  }
+  .col.process ul.items li::before{
+    content: counter(step) ". ";
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:600;
+    color:var(--col-color);
+  }
+  .col.process ul.items{ counter-reset: step; }
+
+  .remove-btn{
+    position:absolute;
+    top:4px; right:4px;
+    width:16px; height:16px;
+    line-height:14px;
+    text-align:center;
+    font-size:12px;
+    color:var(--ink-soft);
+    background:transparent;
+    border:none;
+    cursor:pointer;
+    opacity:0;
+    transition:opacity .12s;
+  }
+  ul.items li:hover .remove-btn{ opacity:1; }
+  .remove-btn:hover{ color:var(--c-color); }
+
+  .add-row{
+    margin:0 12px 14px;
+    padding:8px 10px;
+    text-align:center;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    border:1px dashed var(--line);
+    border-radius:4px;
+    cursor:pointer;
+    background:transparent;
+    width:calc(100% - 24px);
+  }
+  .add-row:hover{ border-color:var(--col-color); color:var(--col-color); }
+
+  /* Spine connecting flow beneath grid */
+  .spine-wrap{
+    margin-top:18px;
+    display:grid;
+    grid-template-columns:repeat(5, 1fr);
+    align-items:center;
+  }
+  .spine-seg{
+    height:2px;
+    background:var(--spine);
+    position:relative;
+  }
+  .spine-seg:not(:last-child)::after{
+    content:"";
+    position:absolute;
+    right:-1px; top:50%;
+    transform:translateY(-50%);
+    width:0; height:0;
+    border-top:5px solid transparent;
+    border-bottom:5px solid transparent;
+    border-left:7px solid var(--spine);
+  }
+  .spine-label{
+    text-align:center;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    color:var(--ink-soft);
+    margin-top:6px;
+    letter-spacing:.06em;
+  }
+
+  .col.suppliers{ --col-color: var(--s-color); }
+  .col.inputs{ --col-color: var(--i-color); }
+  .col.process{ --col-color: var(--p-color); }
+  .col.outputs{ --col-color: var(--o-color); }
+  .col.customers{ --col-color: var(--c-color); }
+
+  footer{
+    margin-top:26px;
+    padding-top:14px;
+    border-top:1px solid var(--line);
+    display:flex;
+    justify-content:space-between;
+    font-size:11.5px;
+    color:var(--ink-soft);
+    font-family:'IBM Plex Mono', monospace;
+  }
+
+  [contenteditable="true"]:empty::before{
+    content: attr(data-placeholder);
+    color:#B7BFBA;
+  }
+
+  @media (max-width: 980px){
+    .grid, .spine-wrap{ grid-template-columns:1fr; }
+    .spine-seg::after{ display:none; }
+  }
+
+  /* Fullscreen presentation polish */
+  body.present .tools .tool-btn.hide-in-present{ display:none; }
+  body.present{ background:var(--bg); }
+  body.present .wrap{ padding-top:40px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <p class="eyebrow">POP.SGQ.010 · Rev. 00 · Sistema de Gestão da Qualidade</p>
+      <h1>Mapa <span class="accent">SIPOC</span> — Gerenciamento de Mudança</h1>
+      <p class="subtitle">Suppliers → Inputs → Process → Outputs → Customers. Clique em qualquer texto para editar durante a apresentação.</p>
+    </div>
+    <div class="tools">
+      <button class="tool-btn hide-in-present" onclick="resetContent()">Restaurar exemplo</button>
+      <button class="tool-btn" onclick="toggleFullscreen()">Tela cheia</button>
+    </div>
+  </header>
+
+  <div class="boundary">
+    <div class="edge start">Início <b contenteditable="true" data-placeholder="evento de início">Identificação de mudança com possível impacto na Segurança de Alimentos</b></div>
+    <div class="dots"></div>
+    <div class="edge end">Fim <b contenteditable="true" data-placeholder="evento de fim">Avaliação de eficácia da mudança sobre o SGSA</b></div>
+  </div>
+
+  <div class="grid" id="grid">
+
+    <div class="col suppliers">
+      <div class="col-head">
+        <div class="letter">S</div>
+        <div class="colname">Suppliers</div>
+        <div class="colname-pt">Fornecedores</div>
+      </div>
+      <ul class="items">
+        <li contenteditable="true">Gestores e Lideranças de todos os setores do Laticínio<button class="remove-btn" onclick="removeItem(this)">✕</button></li>
+        <li contenteditable="true">Responsável pela mudança</li>
+      </ul>
+      <button class="add-row" onclick="addItem(this)">+ adicionar</button>
+    </div>
+
+    <div class="col inputs">
+      <div class="col-head">
+        <div class="letter">I</div>
+        <div class="colname">Inputs</div>
+        <div class="colname-pt">Entradas</div>
+      </div>
+      <ul class="items">
+        <li contenteditable="true">Comunicação prévia da mudança à ESA</li>
+      </ul>
+      <button class="add-row" onclick="addItem(this)">+ adicionar</button>
+    </div>
+
+    <div class="col process">
+      <div class="col-head">
+        <div class="letter">P</div>
+        <div class="colname">Process</div>
+        <div class="colname-pt">Processo</div>
+      </div>
+      <ul class="items">
+        <li contenteditable="true">Informar previamente a mudança à ESA<button class="remove-btn" onclick="removeItem(this)">✕</button></li>
+        <li contenteditable="true">Agendar reunião com a Equipe ESA<button class="remove-btn" onclick="removeItem(this)">✕</button></li>
+        <li contenteditable="true">Preencher FORM.SGQ.017<button class="remove-btn" onclick="removeItem(this)">✕</button></li>
+        <li contenteditable="true">Elaborar plano de ação com medidas de controle<button class="remove-btn" onclick="removeItem(this)">✕</button></li>
+        <li contenteditable="true">Integrar plano de ação ao plano geral da fábrica<button class="remove-btn" onclick="removeItem(this)">✕</button></li>
+        <li contenteditable="true">Avaliar eficácia da implementação sobre o SGSA</li>
+      </ul>
+      <button class="add-row" onclick="addItem(this)">+ adicionar</button>
+    </div>
+
+    <div class="col outputs">
+      <div class="col-head">
+        <div class="letter">O</div>
+        <div class="colname">Outputs</div>
+        <div class="colname-pt">Saídas</div>
+      </div>
+      <ul class="items">
+        <li contenteditable="true">FORM.SGQ.017 preenchido<button class="remove-btn" onclick="removeItem(this)">✕</button></li>
+        <li contenteditable="true">Plano de ação com medidas de controle e adequação<button class="remove-btn" onclick="removeItem(this)">✕</button></li>
+        <li contenteditable="true">Avaliação de eficácia da mudança sobre o SGSA</li>
+      </ul>
+      <button class="add-row" onclick="addItem(this)">+ adicionar</button>
+    </div>
+
+    <div class="col customers">
+      <div class="col-head">
+        <div class="letter">C</div>
+        <div class="colname">Customers</div>
+        <div class="colname-pt">Clientes</div>
+      </div>
+      <ul class="items">
+        <li contenteditable="true">Equipe de Segurança de Alimentos (ESA)<button class="remove-btn" onclick="removeItem(this)">✕</button></li>
+        <li contenteditable="true">Coordenadora da ESA<button class="remove-btn" onclick="removeItem(this)">✕</button></li>
+        <li contenteditable="true">Analista do SGQ<button class="remove-btn" onclick="removeItem(this)">✕</button></li>
+        <li contenteditable="true">FSSC 22000</li>
+      </ul>
+      <button class="add-row" onclick="addItem(this)">+ adicionar</button>
+    </div>
+
+  </div>
+
+  <div class="spine-wrap">
+    <div class="spine-seg"></div>
+    <div class="spine-seg"></div>
+    <div class="spine-seg"></div>
+    <div class="spine-seg"></div>
+    <div class="spine-seg"></div>
+  </div>
+  <div class="spine-wrap">
+    <div class="spine-label">quem fornece</div>
+    <div class="spine-label">o que entra</div>
+    <div class="spine-label">o que se faz</div>
+    <div class="spine-label">o que sai</div>
+    <div class="spine-label">quem recebe</div>
+  </div>
+
+  <footer>
+    <span>SIPOC — Baseado no POP.SGQ.010 (Rev. 00) · Sistema de Gestão da Qualidade</span>
+    <span id="datestamp"></span>
+  </footer>
+
+</div>
+
+<script>
+  document.getElementById('datestamp').textContent = new Date().toLocaleDateString('pt-BR');
+
+  function removeItem(btn){
+    const li = btn.closest('li');
+    li.remove();
+  }
+
+  function addItem(btn){
+    const ul = btn.previousElementSibling;
+    const li = document.createElement('li');
+    li.setAttribute('contenteditable','true');
+    li.setAttribute('data-placeholder','novo item');
+    const rm = document.createElement('button');
+    rm.className = 'remove-btn';
+    rm.textContent = '✕';
+    rm.onclick = function(){ removeItem(rm); };
+    li.appendChild(rm);
+    ul.appendChild(li);
+    li.focus();
+  }
+
+  function toggleFullscreen(){
+    if(!document.fullscreenElement){
+      document.documentElement.requestFullscreen().catch(()=>{});
+      document.body.classList.add('present');
+    } else {
+      document.exitFullscreen();
+      document.body.classList.remove('present');
+    }
+  }
+
+  document.addEventListener('fullscreenchange', ()=>{
+    if(!document.fullscreenElement) document.body.classList.remove('present');
+  });
+
+  function resetContent(){
+    if(confirm('Restaurar o conteúdo de exemplo original? Isso apaga as edições feitas nesta sessão.')){
+      location.reload();
+    }
+  }
+</script>
+</body>
+</html>
